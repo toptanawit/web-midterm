@@ -96,7 +96,6 @@ app.post('/form', (req, res)=>{
         message: req.body.message
     })
 
-    console.log(JSON.stringify(storage));
     res.redirect('/contact');
 });
 
