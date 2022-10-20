@@ -96,7 +96,11 @@ app.post('/form', (req, res)=>{
         message: req.body.message
     })
 
-    res.redirect('/contact');
+    res.redirect('/success');
+});
+
+app.get('/success', (req, res)=>{
+    res.sendFile(path.join(__dirname, "/public/success.html"));
 });
 
 app.get('/', (req, res)=>{
