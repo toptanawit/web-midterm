@@ -21,7 +21,8 @@ var connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'midterm'
+    database: 'midterm',
+    multipleStatements: true
 });
 
 app.use(session({
@@ -46,16 +47,33 @@ app.post('/register', (req, res)=>{
     const post = {
         username: username,
         password: password,
+        logincount: 0
     };
     connection.query('insert into users set ?', post, (err)=>{
         console.log('Registered Successfully');
     });
-    res.redirect('/login');
+    res.redirect('/academic');
 });
 
 app.post('/authen', (req, res)=>{
     var username = req.body.username;
     var password = req.body.password;
+
+    const dateObject = new Date();
+    const date = (`0 ${dateObject.getDate()}`).slice(-2);
+    const month = (`0 ${dateObject.getMonth() + 1}`).slice(-2);
+    const year = dateObject.getFullYear();
+    const hours = dateObject.getHours();
+    const minutes = dateObject.getMinutes();
+    const seconds = dateObject.getSeconds();
+    const finaldate = `${year}-${month}-${date}`;
+    const finaltime = `${hours}:${minutes}:${seconds}`;
+    
+    const time = {
+        username: username,
+        date: finaldate,
+        time: finaltime
+    };
 
     if (req.session.isLoggedIn != null && req.session.isLoggedIn == true){
         res.redirect("/academic");
@@ -64,11 +82,30 @@ app.post('/authen', (req, res)=>{
     if (username && password) {
         connection.query(
             "select * from users where username = ? and password = ?",
-            [username, password],
+            [username, password, username],
             (error, results, fields)=>{
                 if (results.length > 0) {
                     req.session.isLoggedIn = true;
                     req.session.username = username;
+                    connection.query(
+                        'insert into timestamp set ?', time, (err)=>{
+                            console.log('timestamp created', time);
+                        }
+                    );
+                    connection.query(
+                        'select count(username) as number from timestamp where username = ?',
+                        [username],
+                        (error, result)=>{
+                            number = result[0].number
+                            console.log('login count set', number, username)
+                            connection.query(
+                                'update users set logincount = ? where username = ?',
+                                [number, username], (err)=> {
+                                    console.log('login count updated', number, username);
+                                }
+                            );
+                        }
+                    );
                     res.redirect('/academic');
                 } else {
                     res.sendFile(path.join(__dirname, "/public/relogin.html"));
@@ -98,9 +135,11 @@ app.get('/read', function(req, res){
 
 app.get('/dbread', function(req, res){
     if (req.session.isLoggedIn != null && req.session.isLoggedIn == true){
-        connection.query('select * from users', (err, result)=>{
+        connection.query('select * from users; select * from files; select * from timestamp', (err, result)=>{
             res.render('dbread.ejs', {
-                posts: result
+                posts: result[0],
+                posts2: result[1],
+                posts3: result[2]
             });
         }); 
     }else{
@@ -108,49 +147,107 @@ app.get('/dbread', function(req, res){
     }  
 });
 
-app.get('/edit/:id', (req, res)=>{
+app.get('/edit/:id-:db', (req, res)=>{
     const edit_postID = req.params.id;
+    const database = req.params.db;
 
-    connection.query(
-        'select * from users where id = ?',
-        [edit_postID],
-        (err, results)=>{
-            if (results) {
-                res.render('dbedit.ejs', {
-                    post: results[0]
-                });
+    if (database == 'users') {
+        connection.query(
+            'select * from users where id = ?',
+            [edit_postID],
+            (err, results)=>{
+                if (results) {
+                    res.render('dbedit.ejs', {
+                        post: results[0]
+                    });
+                }
             }
-        }
-    );
-});
-
-app.post('/edit/:id', (req, res)=>{
-    const update_username = req.body.username;
-    const update_password = req.body.password;
-    const id = req.params.id;
-
-    connection.query(
-        'update users set username = ?, password = ? where id = ?',
-        [update_username, update_password, id],
-        (err, results)=>{
-            if (results.changedRows === 1) {
-                console.log('Post Updated');
+        );
+    } else {
+        connection.query(
+            'select * from files where id = ?',
+            [edit_postID],
+            (err, results)=>{
+                if (results) {
+                    res.render('dbedit.ejs', {
+                        post: results[0]
+                    });
+                }
             }
-            return res.redirect('/dbread');
-        }
-    );
+        );
+    }
 });
 
-app.get('/delete/:id', (req, res)=>{
-    connection.query(
-        'delete from users where id = ?',
-        [req.params.id],
-        (err, results)=>{
-            return res.redirect('/dbread');
-        }
-    );
+app.post('/edit/:id-:db', (req, res)=>{
+    if (req.params.db == 'users') {
+        const update_username = req.body.username;
+        const update_password = req.body.password;
+        const id = req.params.id;
+
+        connection.query(
+            'update users set username = ?, password = ? where id = ?',
+            [update_username, update_password, id],
+            (err, results)=>{
+                if (results.changedRows === 1) {
+                    console.log('Post Updated');
+                }
+                return res.redirect('/dbread');
+            }
+        );
+    } else {
+        const update_name = req.body.name;
+        const update_filename = req.body.filename;
+        const id = req.params.id;
+
+        connection.query(
+            'update files set name = ?, filename = ? where id = ?',
+            [update_name, update_filename, id],
+            (err, results)=>{
+                if (results.changedRows === 1) {
+                    console.log('Post Updated');
+                }
+                return res.redirect('/dbread');
+            }
+        );
+    }
 });
 
+app.get('/delete/:id-:db', (req, res)=>{
+    if (req.params.db == 'users') {
+        connection.query(
+            'delete from users where id = ?',
+            [req.params.id],
+            (err, results)=>{
+                return res.redirect('/dbread');
+            }
+        );
+    } else {
+        connection.query(
+            'delete from files where id = ?',
+            [req.params.id],
+            (err, results)=>{
+                return res.redirect('/dbread');
+            }
+        );
+    }
+});
+
+app.get('/dbadd', (req,res)=>{
+    res.sendFile(path.join(__dirname, "/public/dbadd.html"));  
+});
+
+app.post('/dbadd', (req, res)=>{
+    const name = req.body.name;
+    const filename = req.body.filename;
+    const post = {
+        name: name,
+        filename: filename,
+    };
+    connection.query('insert into files set ?', post, (err)=>{
+        console.log('Created Data Successfully');
+    });
+    res.redirect('/dbread');
+});
 
 app.get('/logout', function(req, res){
     req.session.destroy();
@@ -158,6 +255,7 @@ app.get('/logout', function(req, res){
 });
 
 var router = require('./export_route_module');
+const e = require('express');
 app.use('',router);
 
 app.get('/home', (req, res)=>{

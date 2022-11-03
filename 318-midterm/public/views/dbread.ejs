@@ -88,31 +88,84 @@
 
         <div class="col-lg-12 align-items-stretch" data-aos="fade-up">
           
+          <h4 class="text-primary">Users</h4>
+          <a href="/register"><button class="btn btn-info">Create</button></a>
           <table class="table">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Username</th>
-                    <th scope="col">Password</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Edit</th>
-                    <th scope="col">Delete</th>
+                  <th scope="col">#</th>
+                  <th scope="col">Username</th>
+                  <th scope="col">Password</th>
+                  <th scope="col">Login Count</th>
+                  <th scope="col">Edit</th>
+                  <th scope="col">Delete</th>
                 </tr>
             </thead>
             <tbody>
                 
                <% for(var i=0; i < posts.length; i++) { %>
                <tr>
-                   <td><%= posts[i].id %></td>
-                   <td><%= posts[i].username %></td>
-                   <td><%= posts[i].password %></td>
-                    <td><%= posts[i].email %></td>
-                    <td><a class="btn btn-warning" href="edit/<%= posts[i].id %>" </a>Edit </a> </td>
-                    <td><a class="btn btn-danger" href='delete/<%= posts[i].id %>' </a>Delete </a> </td>
+                  <td><%= posts[i].id %></td>
+                  <td><%= posts[i].username %></td>
+                  <td><%= posts[i].password %></td>
+                  <td><%= posts[i].logincount %></td>
+                  <td><a class="btn btn-warning" href="edit/<%= posts[i].id %>-users" </a>Edit </a> </td>
+                  <td><a class="btn btn-danger" href='delete/<%= posts[i].id %>-users' </a>Delete </a> </td>
                </tr>
                <% } %>
                 
             </tbody>
+        </table>
+
+        <h4 class="text-primary">Files</h4>
+        <a href="/dbadd"><button class="btn btn-info">Create</button></a>
+        <table class="table">
+          <thead class="thead-dark">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">File Name</th>
+                <th scope="col">Edit</th>
+                <th scope="col">Delete</th>
+              </tr>
+          </thead>
+          <tbody>
+              
+             <% for(var i=0; i < posts2.length; i++) { %>
+             <tr>
+                <td><%= posts2[i].id %></td>
+                <td><%= posts2[i].name %></td>
+                <td><%= posts2[i].filename %></td>
+                <td><a class="btn btn-warning" href="edit/<%= posts2[i].id %>-files" </a>Edit </a> </td>
+                <td><a class="btn btn-danger" href='delete/<%= posts2[i].id %>-files' </a>Delete </a> </td>
+             </tr>
+             <% } %>
+              
+          </tbody>
+        </table>
+
+        <h4 class="text-primary">Timestamp</h4>
+        <table class="table">
+          <thead class="thead-dark">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">Date</th>
+                <th scope="col">Time</th>
+              </tr>
+          </thead>
+          <tbody>
+              
+             <% for(var i=0; i < posts3.length; i++) { %>
+             <tr>
+                <td><%= posts3[i].id %></td>
+                <td><%= posts3[i].username %></td>
+                <td><%= posts3[i].date %></td>
+                <td><%= posts3[i].time %></td>
+             </tr>
+             <% } %>
+              
+          </tbody>
         </table>
 
         </div>
